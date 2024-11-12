@@ -7,6 +7,9 @@ from urllib.parse import quote
 import json
 import typing
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Hellohook(commands.Cog):
     """Custom welcome message bots"""
 
@@ -55,18 +58,23 @@ class Hellohook(commands.Cog):
             greetMessageStr = greetMessageStr.replace("https://&&USERMENTION&&", str(userObj.mention))
         if "https://&&USERNAME&&" in greetMessageStr:
             greetMessageStr = greetMessageStr.replace("https://&&USERNAME&&", str(userObj.name))
+        # 2024: Will return #0, new Discord username system: https://support.discord.com/hc/en-us/articles/12620128861463-New-Usernames-Display-Names
         if "https://&&USERNAME1234&&" in greetMessageStr:
             greetMessageStr = greetMessageStr.replace("https://&&USERNAME1234&&", str(userObj.name)+"#"+str(userObj.discriminator))
+        if "https://&&GLOBALNAME&&" in greetMessageStr:
+            greetMessageStr = greetMessageStr.replace("https://&&GLOBALNAME&&", str(userObj.global_name))
+        if "https://&&DISPLAYNAME&&" in greetMessageStr:
+            greetMessageStr = greetMessageStr.replace("https://&&DISPLAYNAME&&", str(userObj.display_name))
         if "https://&&SERVERCOUNT&&" in greetMessageStr:
             greetMessageStr = greetMessageStr.replace("https://&&SERVERCOUNT&&", str(userObj.guild.member_count))
         if "https://&&SERVERCOUNTORD&&" in greetMessageStr:
             greetMessageStr = greetMessageStr.replace("https://&&SERVERCOUNTORD&&", str(self.ordinalize_num(userObj.guild.member_count)))
         greetMessageJson = json.loads(str(greetMessageStr))
         # Patch fix: send() got an unexpected keyword argument 'attachments'
-        if "attachments" in greetMessageJson:
+        if greetMessageJson.get("attachments", False) is not False:
             greetMessageJson.pop("attachments")
         # Create embed
-        if greetMessageJson["embeds"]:
+        if greetMessageJson.get("embeds", None) not in ["null", None, []]:
             # For loops not working for some reason? Force patching to add support for 2 embeds
             e = discord.Embed.from_dict(greetMessageJson["embeds"][0])
             try:
@@ -83,7 +91,8 @@ class Hellohook(commands.Cog):
                 **{k: v for k, v in greetMessageJson.items() if v is not None}
             )
         except Exception as err:
-            print(err)
+            logger.error("Error:", err)
+            logger.debug(webhook, userObj, greetMessage)
             return err
 
     async def inviteFetch(ctx, guildObj, inviteLink: str):
@@ -308,14 +317,27 @@ class Hellohook(commands.Cog):
             try:
                 greetWebhook = SyncWebhook.from_url(greetWebhook)
                 await self.hellohookSender(greetWebhook, ctx.message.author, greetMessage)
-            except:
+            except Exception as err:
+                logger.error("Error:", err)
+                logger.debug(greetWebhook, ctx.message.author, greetMessage)
                 await ctx.send("Error: Hellohook Greet message failed. Is your webhook deleted, or your message empty?")
             try:
                 leaveWebhook = SyncWebhook.from_url(leaveWebhook)
                 await self.hellohookSender(leaveWebhook, ctx.message.author, leaveMessage)
-            except:
+            except Exception as err:
+                logger.error("Error:", err)
+                logger.debug(leaveWebhook, ctx.message.author, greetMessage)
                 await ctx.send("Error: Hellohook Leave message failed. Is your webhook deleted, or your message empty?")
         except Exception as err:
+            logger.error("Error:", err)
+            logger.debug(
+                "hellohookEnabled:", hellohookEnabled,
+                "greetWebhook:", greetWebhook,
+                "greetMessage:", greetMessage,
+                "leaveEnabled:", leaveEnabled,
+                "leaveWebhook:", leaveWebhook,
+                "leaveMessage:", leaveMessage
+            )
             await ctx.send("Error: "+str(err))
 
     @hellohook.command(name="toggle")
@@ -379,7 +401,8 @@ class Hellohook(commands.Cog):
         invMsgPred = await ctx.bot.wait_for("message")
         try:
             invMsgJson = json.loads(invMsgPred.clean_content)
-        except:
+        except Exception as err:
+            logger.debug("Error in invite setup invMsg:", err)
             return await ctx.send("Error: Invalid JSON.... setup exited.")
 
         # Set message
@@ -394,7 +417,8 @@ class Hellohook(commands.Cog):
                 "message": invMsgJson,
                 "roles": invRolesList
             }
-        except:
+        except Exception as err:
+            logger.debug("Error in invite setup invRoles:", err)
             return await ctx.send("Error: Variables failed.... setup exited.\n"+str(invObj))
 
         # Return changes
@@ -419,7 +443,8 @@ class Hellohook(commands.Cog):
             inviteList[inviteLink][field] = updatedContentHere
             await self.config.guild(ctx.guild).inviteList.set(inviteList)
             return await ctx.message.add_reaction("✅")
-        except:
+        except Exception as err:
+            logger.error("Error:", err)
             await ctx.send("Error: Could not update. Did you type it in the format:\nINVITELINKCODE   FIELD   NEW_CONTENT_HERE")
 
     @hhinv.command(name="remove")
@@ -454,7 +479,8 @@ class Hellohook(commands.Cog):
                         "message": inviteList[str(ni.id)]["message"],
                         "roles": inviteList[str(ni.id)].get("roles", None),
                     }
-            except:
+            except Exception as err:
+                logger.error("Error:", err)
                 pass
         # Replace previous config, cache old one
         await self.config.guild(ctx.guild).oldInviteList.set(inviteList)
@@ -473,7 +499,8 @@ class Hellohook(commands.Cog):
             e.add_field(name="Greet Message", value='```json\n' + str(json.dumps(inviteList[io]["message"]))[:1011]+'```', inline=False)
             e.add_field(name="Roles", value='```json\n' + str(inviteList[io].get("roles", None))[:1011]+'```', inline=False)
             await ctx.send(embed=e)
-          except:
+          except Exception as err:
+            logger.error("Error:", err)
             e = discord.Embed(color=(await ctx.embed_colour()), title=io, description="Data error:\n"+str(inviteList[io]))
             await ctx.send(embed=e)
         return
@@ -496,7 +523,8 @@ class Hellohook(commands.Cog):
                         await self.hellohookSender(invHook, userObj, savedInvites[str(gio.code)]["message"])
                         # End early if webhook exists and was sent successfully
                         # return
-                except:
+                except Exception as err:
+                    logger.error("Error:", err)
                     pass
         await ctx.send("Ended test")
 
@@ -535,7 +563,8 @@ class Hellohook(commands.Cog):
                         await self.hellohookSender(invHook, userObj, savedInvites[str(gio.code)]["message"])
                         # End early if webhook exists and was sent successfully
                         return
-                except:
+                except Exception as err:
+                    logger.debug("Error:", err)
                     pass
 
         # Otherwise, use default welcome

@@ -80,8 +80,9 @@ class Pinboard(commands.Cog):
         e = discord.Embed(color=(await ctx.embed_colour()), title=pinnedMsgName, description=description)
 
         for key, value in pinStore[pinnedMsgName]["content"].items():
-            # userObj = self.bot.get_user(int(key))
             userObj = ctx.guild.get_member(int(key))
+            if userObj is None:
+                continue
             payload = str(value)+"\u000a\u200b"
             e.add_field(name=userObj.display_name, value=payload, inline=True)
 
@@ -91,32 +92,11 @@ class Pinboard(commands.Cog):
             await pinnedMsgObj.pin()
         return
 
-        # description = str(pinStore[pinnedMsgName]["description"])
-        # content = ""
-
-        # for key, value in pinStore[pinnedMsgName]["content"].items():
-        #     userObj = self.bot.get_user(int(key))
-        #     content = content+userObj.mention+"\n"+str(value)+"\n\n"
-
-        # msgbody = description+"\n\n"+content
-        # await pinnedMsgObj.edit(content=msgbody)
-        # if repin == True:
-        #     await pinnedMsgObj.unpin()
-        #     await pinnedMsgObj.pin()
-        # return
-
     async def psUpdateAll(self, ctx, repin=False):
         pinStore = await self.config.guild(ctx.guild).pinStore()
         for key, value in pinStore.items():
             await self.psUpdateData(ctx, key, repin)
         return
-
-    # async def psGetUserData(self, ctx, user):
-    #     pinStore = await self.config.guild(ctx.guild).pinStore()
-    #     returnData = "```"
-    #     for key, value in pinStore.items():
-    #         if key["content"][user.id]:
-    #             returnData += key.
 
 
     # Bot Commands

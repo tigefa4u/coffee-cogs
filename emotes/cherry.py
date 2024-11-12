@@ -5,6 +5,9 @@ import discord
 from discord import Webhook, SyncWebhook
 import re
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Cherry():
   """Cherry Emotes is the engine behind interacting with emotes in chat for non-nitro users using webhooks."""
 
@@ -40,6 +43,19 @@ class Cherry():
       return list(OrderedDict.fromkeys(matchEmotes))
     else:
       return False
+
+  def textSplitter(text, max_length=1990, split_at='\n'):
+    chunks = []
+    while text:
+      if len(text) <= max_length:
+        chunks.append(text)
+        break
+      split_index = text.rfind(split_at, 0, max_length)
+      if split_index == -1:
+        split_index = max_length
+      chunks.append(text[:split_index + 1])
+      text = text[split_index + 1:]
+    return chunks
 
   async def webhookFinder(self, ctx, bot):
     # Find a webhook that the bot made
@@ -100,6 +116,23 @@ class Cherry():
         sendMsg = re.sub(fr"({en})", emoteStr, sendMsg)
     return sendMsg
 
+  def esheetProcessorLinks(self, sendMsg, emoteNames, emoteStore):
+    emoteLinks = []
+    for en in emoteNames:
+      es = Cherry.esheetFinder(self, en, emoteStore)
+      if es is not False:
+        # [2] is emote url
+        emoteLink = es[2]
+        if "size=" in emoteLink:
+          emoteSize = re.findall(r"(?<=size=)([0-9]+)", emoteLink)[0]
+          emoteLink = emoteLink.replace(str(emoteSize), "64")
+        elif "?" in emoteLink:
+          emoteLink += "&size=64"
+        else:
+          emoteLink += "?size=64"
+        emoteLinks.append(emoteLink)
+    return emoteLinks
+
 
   # Utilities for 'recents'
   # Searches through channel's recent messages to find a match
@@ -115,8 +148,10 @@ class Cherry():
 
   async def recentsHistRetriever(self, message, cherryRecentsCount):
     try:
-      return await message.channel.history(limit=cherryRecentsCount).flatten()
-    except:
+      recentHistory = [message async for message in message.channel.history(limit=cherryRecentsCount)]
+      return recentHistory
+    except Exception as err:
+      logger.debug(err)
       return False
 
   def recentsProcessor(self, sendMsg, recentsBankBuilder, emoteNames):

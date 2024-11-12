@@ -36,7 +36,7 @@ class Coffeetime(commands.Cog):
     async def format_results(self, ctx, tz):
         if not tz:
             await ctx.send(
-                "Sorry, didn't find a timezone for your city :(\nTry another nearby city in your timezone, or finding your city in this full list:\nhttps://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List"
+                "Sorry, didn't find a timezone for your city :(\nTry a city from this list:\nhttps://coffeebank.github.io/timezone-picker"
             )
             return None
         elif len(tz) == 1:
@@ -50,7 +50,7 @@ class Coffeetime(commands.Cog):
             embed_list = []
             for page in pagify(msg, delims=["\n"], page_length=500):
                 e = discord.Embed(title=f"{len(tz)} results... could you try being more specific?\n\n ie. `America/Los Angeles`", description=page)
-                e.set_footer(text="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List")
+                e.set_footer(text="https://coffeebank.github.io/timezone-picker")
                 embed_list.append(e)
             if len(embed_list) == 1:
                 close_control = {"\N{CROSS MARK}": close_menu}
@@ -115,7 +115,7 @@ class Coffeetime(commands.Cog):
 
         Most big cities near you should work....
 
-        Not working? [See the full list of cities here >](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List)
+        Not working? [See your timezone here >](https://coffeebank.github.io/timezone-picker)
         """
         tz_results = self.fuzzy_timezone_search(city_name_here)
         tz_resp = await self.format_results(ctx, tz_results)
@@ -129,7 +129,7 @@ class Coffeetime(commands.Cog):
 
         Most big cities near you should work....
 
-        Not working? [See the full list of cities here >](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List)
+        Not working? [See your timezone here >](https://coffeebank.github.io/timezone-picker)
         """
         tz_results = self.fuzzy_timezone_search(city_name)
         tz_resp = await self.format_results(ctx, tz_results)
@@ -143,8 +143,8 @@ class Coffeetime(commands.Cog):
     async def timetools(self, ctx):
         """
         Checks the time.
-        For the list of supported timezones, see here:
-        https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+        Find your timezone and a list of supported timezones here:
+        https://coffeebank.github.io/timezone-picker
         """
         pass
 
@@ -220,7 +220,7 @@ class Coffeetime(commands.Cog):
         if not usertime:
             return await ctx.send(
                 f"You haven't set your timezone. Do `{ctx.prefix}time me Continent/City`: "
-                "see <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>"
+                "see <https://coffeebank.github.io/timezone-picker>"
             )
         if not othertime:
             return await ctx.send(f"That user's timezone isn't set yet.")
