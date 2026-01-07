@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 def discord_embed_result(result, color: str=None, service: str=None, idx: int=None, idx_total: int=None, external_links_inline=True, names_inline=True, tags_inline=True):
     try:
         em = result
-        embed = discord.Embed(title=em.get('title', str(None)))
+        embed = discord.Embed(title=em.get('title', str(None))[:256])
         embed.url = em.get('link', None)
         embed.description = em.get('embed_description')
         embed.set_image(url=em.get('image'))
@@ -39,6 +39,7 @@ def discord_embed_result(result, color: str=None, service: str=None, idx: int=No
             idx_str = "/".join([str(idx+1), str(idx_total)])
         embed.set_footer(text=" ・ ".join(filter(None, [" ".join(filter(None, [em["info_format"], em["info_start_year"]])), service, idx_str])))
         return embed
+    # (2026-01-06) HTTPException only surfaces in models.py when msg.edit is attempted, can't add here
     except Exception as err:
         logger.error(err, exc_info=True)
         return None
