@@ -63,27 +63,35 @@ class Coffeeani(commands.Cog):
         - `[p]bangumi manga
         - `[p]batoto`
         """
-        msg = await ctx.send(embeds=[discord_embed_source(NAME_ANILIST, COLOR_ANILIST)])
-        embeds = await discord_anilist_embeds(ctx, "MANGA", title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+        try:
+            msg = await ctx.send(embeds=[discord_embed_source(NAME_ANILIST, COLOR_ANILIST)])
+            embeds = await discord_anilist_embeds(ctx, "MANGA", title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
 
-        await msg.edit(embeds=[discord_embed_source(NAME_MANGADEX, COLOR_MANGADEX)])
-        embeds = await discord_mangadex_embeds(title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            await msg.edit(embeds=[discord_embed_source(NAME_MANGADEX, COLOR_MANGADEX)])
+            embeds = await discord_mangadex_embeds(title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
 
-        await msg.edit(embeds=[discord_embed_source(NAME_BANGUMI, COLOR_BANGUMI)])
-        embeds = await discord_bangumi_embeds("manga", title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            await msg.edit(embeds=[discord_embed_source(NAME_BANGUMI, COLOR_BANGUMI)])
+            embeds = await discord_bangumi_embeds("manga", title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
 
-        await msg.edit(embeds=[discord_embed_source(NAME_BATOTO, COLOR_BATOTO)])
-        embeds = await discord_batoto_embeds(title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            await msg.edit(embeds=[discord_embed_source(NAME_BATOTO, COLOR_BATOTO)])
+            embeds = await discord_batoto_embeds(title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
 
-        return await msg.edit(embeds=[discord_embed_source(None)])
+            return await msg.edit(embeds=[discord_embed_source(None)])
+
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                return await ctx.send("Search was cancelled.")
+            except Exception:
+                pass
 
     @commands.hybrid_command(name="animecharacter", aliases=["animechar"])
     @app_commands.describe(name="Search for an anime/manga character")
@@ -118,22 +126,36 @@ class Coffeeani(commands.Cog):
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
     async def anilist_anime(self, ctx, *, title):
         """Search Anilist for anime"""
-        msg = await ctx.send(embeds=[discord_embed_source(NAME_ANILIST, COLOR_ANILIST)])
-        embeds = await discord_anilist_embeds(ctx, "ANIME", title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
-        return await msg.edit(embeds=[discord_embed_source(None)])
+        try:
+            msg = await ctx.send(embeds=[discord_embed_source(NAME_ANILIST, COLOR_ANILIST)])
+            embeds = await discord_anilist_embeds(ctx, "ANIME", title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            return await msg.edit(embeds=[discord_embed_source(None)])
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                return await ctx.send("Search was cancelled.")
+            except Exception:
+                pass
 
     @anilist.command(name="manga", aliases=["manhwa", "manhua", "lightnovel"])
     @app_commands.describe(title="Search Anilist for manga/manhwa/manhua and light novels")
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
     async def anilist_manga(self, ctx, *, title):
         """Search Anilist for manga, manhwa, manhua, and light novels"""
-        msg = await ctx.send(embeds=[discord_embed_source(NAME_ANILIST, COLOR_ANILIST)])
-        embeds = await discord_anilist_embeds(ctx, "MANGA", title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
-        return await msg.edit(embeds=[discord_embed_source(None)])
+        try:
+            msg = await ctx.send(embeds=[discord_embed_source(NAME_ANILIST, COLOR_ANILIST)])
+            embeds = await discord_anilist_embeds(ctx, "MANGA", title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            return await msg.edit(embeds=[discord_embed_source(None)])
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                return await ctx.send("Search was cancelled.")
+            except Exception:
+                pass
 
     @anilist.command(name="user")
     @app_commands.describe(username="Search Anilist for a user")
@@ -160,11 +182,18 @@ class Coffeeani(commands.Cog):
         """Search MangaDex
         
         Search MangaDex for manga, manhwa, and manhua"""
-        msg = await ctx.send(embeds=[discord_embed_source(NAME_MANGADEX, COLOR_MANGADEX)])
-        embeds = await discord_mangadex_embeds(title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
-        return await msg.edit(embeds=[discord_embed_source(None)])
+        try:
+            msg = await ctx.send(embeds=[discord_embed_source(NAME_MANGADEX, COLOR_MANGADEX)])
+            embeds = await discord_mangadex_embeds(title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            return await msg.edit(embeds=[discord_embed_source(None)])
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                return await ctx.send("Search was cancelled.")
+            except Exception:
+                pass
 
     @commands.hybrid_group(name="bangumi")
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
@@ -182,11 +211,18 @@ class Coffeeani(commands.Cog):
         """Search Bangumi for anime/donghua
         
         Note: Results may be in Chinese or original language."""
-        msg = await ctx.send(embeds=[discord_embed_source(NAME_BANGUMI, COLOR_BANGUMI)])
-        embeds = await discord_bangumi_embeds("anime", title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
-        return await msg.edit(embeds=[discord_embed_source(None)])
+        try:
+            msg = await ctx.send(embeds=[discord_embed_source(NAME_BANGUMI, COLOR_BANGUMI)])
+            embeds = await discord_bangumi_embeds("anime", title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            return await msg.edit(embeds=[discord_embed_source(None)])
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                return await ctx.send("Search was cancelled.")
+            except Exception:
+                pass
 
     @bangumi.command(name="manga", aliases=["manhwa", "manhua", "lightnovel"])
     @app_commands.describe(title="Search Bangumi for manga/manhwa/manhua and light novels")
@@ -195,11 +231,18 @@ class Coffeeani(commands.Cog):
         """Search Bangumi for manga, manhwa, manhua, and light novels
         
         Note: Results may be in Chinese or original language."""
-        msg = await ctx.send(embeds=[discord_embed_source(NAME_BANGUMI, COLOR_BANGUMI)])
-        embeds = await discord_bangumi_embeds("manga", title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
-        return await msg.edit(embeds=[discord_embed_source(None)])
+        try:
+            msg = await ctx.send(embeds=[discord_embed_source(NAME_BANGUMI, COLOR_BANGUMI)])
+            embeds = await discord_bangumi_embeds("manga", title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            return await msg.edit(embeds=[discord_embed_source(None)])
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                return await ctx.send("Search was cancelled.")
+            except Exception:
+                pass
 
     @commands.hybrid_command()
     @app_commands.describe(title="Search Batoto for manga, manhwa, and manhua")
@@ -208,8 +251,15 @@ class Coffeeani(commands.Cog):
         """Search Batoto
         
         Search Batoto for manga, manhwa, and manhua"""
-        msg = await ctx.send(embeds=[discord_embed_source(NAME_BATOTO, COLOR_BATOTO)])
-        embeds = await discord_batoto_embeds(title)
-        if embeds:
-            return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
-        return await msg.edit(embeds=[discord_embed_source(None)])
+        try:
+            msg = await ctx.send(embeds=[discord_embed_source(NAME_BATOTO, COLOR_BATOTO)])
+            embeds = await discord_batoto_embeds(title)
+            if embeds:
+                return await ExtendedSimpleMenu(pages=embeds, timeout=90).replace(ctx, msg)
+            return await msg.edit(embeds=[discord_embed_source(None)])
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                return await ctx.send("Search was cancelled.")
+            except Exception:
+                pass

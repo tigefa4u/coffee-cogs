@@ -2,6 +2,9 @@ from redbot.core.commands import Context
 from redbot.core.utils.views import SimpleMenu
 import discord
 
+import logging
+logger = logging.getLogger(__name__)
+
 class ExtendedSimpleMenu(SimpleMenu):
     """A simple Button menu, extended."""
 
@@ -19,5 +22,19 @@ class ExtendedSimpleMenu(SimpleMenu):
         self.author = ctx.author
         self.ctx = ctx
         kwargs = await self.get_page(self.current_page)
-        self.message = await msg.edit(**kwargs)
-        return self.message
+        try:
+            self.message = await msg.edit(**kwargs)
+            return self.message
+        # Invalid embed, ie. title too long
+        except discord.HTTPException as err:
+            logger.error(err, exc_info=True)
+            try:
+                await ctx.send("Error: "+str(err))
+            except Exception:
+                pass
+        # Search results message was deleted
+        except discord.NotFound as err:
+            try:
+                await ctx.send("Search was cancelled.")
+            except Exception:
+                pass
